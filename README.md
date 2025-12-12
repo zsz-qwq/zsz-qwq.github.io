@@ -1,2 +1,1 @@
-# zsz-qwq.github.io
-zsz_qwq
+### zsz-qwq's GitHub repository
