@@ -181,6 +181,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .result-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .result-body {
             padding: 20px;
@@ -764,20 +771,41 @@
                 while ((match = inlineMath.exec(line)) !== null) {
                     const content = match[1];
                     const commonVars = ['x', 'y', 'z', 'n', 'm', 'k', 'i', 'j', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'l', 'r', 't', 's', 'u', 'v', 'w', 'p', 'q'];
+                    const mathVars = ['dp', 'ans', 'res', 'maxn', 'minn', 'sum', 'cnt', 'tot', 'len', 'pos', 'pre', 'suf', 'mid', 'l', 'r', 'i', 'j', 'k', 'n', 'm', 'x', 'y'];
+                    const mathFuncs = ['max', 'min', 'abs', 'gcd', 'lcm', 'sqrt', 'log', 'sin', 'cos', 'tan', 'sum', 'prod'];
+                    const algoNames = ['DP', 'SPFA', 'DFS', 'BFS', 'Dijkstra', 'Floyd', 'Kruskal', 'Prim', 'LCA', 'RMQ', 'SCC', 'TSP', 'CDQ', 'FFT', 'NTT', 'SAM', 'SA', 'SGT', 'BIT', 'Sqrt', 'Mo', 'Treap', 'Splay', 'LCT', 'HLD'];
                     const isSingleCommonVar = /^[a-zA-Z]$/.test(content) && commonVars.includes(content.toLowerCase());
                     
                     if (/[a-zA-Z]+/.test(content) && !content.includes('\\text') && !content.includes('\\texttt')) {
-                        const hasMathSymbol = /[+\-*/=<>^_\\]/.test(content);
+                        const hasMathSymbol = /[+\-*/=<>^_\[\],]/.test(content);
                         const hasMathCommand = /\\[a-zA-Z]+/.test(content);
-                        const hasBrackets = /\{\}/.test(content);
-                        if (!hasMathSymbol && !hasMathCommand && !hasBrackets && content.match(/[a-zA-Z]+/g) && !isSingleCommonVar) {
-                            issues.push({
-                                type: 'warning',
-                                title: 'LaTeX 中可能包含非数学文本',
-                                desc: `公式 "${content}" 中包含普通文本，建议使用 \\text{} 包裹`,
-                                line: lineNum,
-                                col: match.index + 1
-                            });
+                        const hasBrackets = /[()\[\]{}]/.test(content);
+                        const hasSubscript = content.includes('_') || content.includes('^');
+                        
+                        const cleanContent = content.replace(/[_{}\[\]()^,\s]/g, '');
+                        const isCommonMathVar = mathVars.includes(cleanContent.toLowerCase()) || 
+                                            mathFuncs.includes(cleanContent.toLowerCase());
+                        const isVarList = /^(\s*[a-zA-Z]\s*,)+\s*[a-zA-Z]\s*$/.test(content);
+                        
+                        if (!hasMathSymbol && !hasMathCommand && !hasBrackets && !hasSubscript && 
+                            !isCommonMathVar && !isVarList && content.match(/[a-zA-Z]+/g) && content.length > 1) {
+                            if (algoNames.includes(cleanContent)) {
+                                issues.push({
+                                    type: 'warning',
+                                    title: '算法名称不应使用 LaTeX',
+                                    desc: `算法名 "${content}" 不应使用 $...$ 包裹，建议使用 **${cleanContent}**`,
+                                    line: lineNum,
+                                    col: match.index + 1
+                                });
+                            } else {
+                                issues.push({
+                                    type: 'warning',
+                                    title: 'LaTeX 中可能包含非数学文本',
+                                    desc: `公式 "${content}" 中包含普通文本，建议使用 \\text{} 包裹`,
+                                    line: lineNum,
+                                    col: match.index + 1
+                                });
+                            }
                         }
                     }
                     
@@ -821,8 +849,6 @@
                         });
                     }
                 }
-                
-
             }
             
             const displayMathRegex = /\$\$([\s\S]*?)\$\$/g;
@@ -887,7 +913,7 @@
                 });
             }
             
-            if (!text.includes('时间复杂度') && !text.includes('O(') && !text.includes('O(')) {
+            if (!text.includes('时间复杂度') && !text.includes('O(')) {
                 issues.push({
                     type: 'warning',
                     title: '缺少时间复杂度分析',
@@ -934,7 +960,7 @@
                 });
             }
             
-            const headers = text.match(/^#+\s.*$/gm);
+            const headers = text.match(/^#+[^#\s].*$/gm);
             if (headers) {
                 const levels = headers.map(h => h.match(/^(#+)/)[1].length);
                 for (let i = 1; i < levels.length; i++) {
@@ -997,11 +1023,13 @@
                 return;
             }
             
-            issuesList.innerHTML = issues.map(issue => {
+            issuesList.innerHTML = issues.map((issue, index) => {
                 const icon = issue.type === 'success' ? '✓' : issue.type === 'warning' ? '⚠️' : '✗';
                 const location = issue.line ? `行 ${issue.line}${issue.col ? `, 列 ${issue.col}` : ''}` : '全文';
+                const clickHandler = issue.line ? `onclick="JumpTo(${issue.line})"` : '';
+                const cursorStyle = issue.line ? 'cursor: pointer;' : '';
                 return `
-                    <li class="issue-item ${issue.type}">
+                    <li class="issue-item ${issue.type}" ${clickHandler} style="${cursorStyle}" id="issue-${index}">
                         <span class="issue-icon">${icon}</span>
                         <div class="issue-content">
                             <div class="issue-title">${issue.title}</div>
@@ -1029,7 +1057,8 @@
         function syncScroll() {
             const textarea = document.getElementById('inputText');
             const lineNumbers = document.getElementById('lineNumbers');
-            lineNumbers.scrollTop = textarea.scrollTop;
+            const ratio = textarea.scrollTop / (textarea.scrollHeight - textarea.clientHeight);
+            lineNumbers.scrollTop = ratio * (lineNumbers.scrollHeight - lineNumbers.clientHeight);
         }
         
         function clearAll() {
@@ -1060,39 +1089,46 @@
                 checkSolution();
             }
         });
-        
-        let currentFilter = 'all';
-        
-        function filterIssues(type) {
-            currentFilter = type;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            const items = document.querySelectorAll('.issue-item');
-            items.forEach(item => {
-                if (type === 'all' || item.classList.contains(type)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
+
+        function JumpTo(line){
+            const textarea = document.getElementById('inputText');
+            const lines = textarea.value.split('\n');
+            let pos = 0;
+            for (let i = 0; i < line - 1 && i < lines.length; i++) {
+                pos += lines[i].length + 1;
+            }
+            textarea.focus();
+            textarea.setSelectionRange(pos, pos);
+            textarea.scrollTop = Math.max(0, (line - 1) * 24 - 100);
+            document.getElementById('lineNumbers').scrollTop = textarea.scrollTop;
         }
-        
+
         function exportReport() {
-            const issues = document.getElementById('issuesList').children;
+            const issuesItems = document.querySelectorAll('#issuesList .issue-item');
             let report = '洛谷题解格式检查报告\n';
             report += '='.repeat(50) + '\n\n';
-            report += `检查时间: ${document.getElementById('checkTime').textContent}\n`;
+            report += `检查时间: ${document.getElementById('checkTime').textContent || '未检查'}\n`;
             report += `通过: ${document.getElementById('successCount').textContent} `;
             report += `警告: ${document.getElementById('warningCount').textContent} `;
             report += `错误: ${document.getElementById('errorCount').textContent}\n\n`;
+            report += '详细问题列表：\n';
+            report += '-'.repeat(40) + '\n';
             
-            Array.from(issues).forEach(issue => {
-                const title = issue.querySelector('.issue-title')?.textContent || '';
-                const desc = issue.querySelector('.issue-desc')?.textContent || '';
-                const location = issue.querySelector('.issue-location')?.textContent || '';
-                report += `[${title}]\n${desc}\n${location}\n\n`;
-            });
+            if (issuesItems.length === 1 && issuesItems[0].querySelector('.issue-title')?.textContent === '检查通过') {
+                report += '恭喜！您的题解格式完全符合洛谷题解规范！\n';
+            } else {
+                issuesItems.forEach((item, idx) => {
+                    const titleElem = item.querySelector('.issue-title');
+                    const descElem = item.querySelector('.issue-desc');
+                    const locationElem = item.querySelector('.issue-location');
+                    if (titleElem && descElem) {
+                        const type = item.classList.contains('error') ? '[错误]' : (item.classList.contains('warning') ? '[警告]' : '[通过]');
+                        report += `\n${type} ${titleElem.textContent}\n`;
+                        report += `  说明: ${descElem.textContent}\n`;
+                        if (locationElem) report += `  位置: ${locationElem.textContent}\n`;
+                    }
+                });
+            }
             
             const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
