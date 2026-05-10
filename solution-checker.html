@@ -763,12 +763,14 @@
                 let match;
                 while ((match = inlineMath.exec(line)) !== null) {
                     const content = match[1];
+                    const commonVars = ['x', 'y', 'z', 'n', 'm', 'k', 'i', 'j', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'l', 'r', 't', 's', 'u', 'v', 'w', 'p', 'q'];
+                    const isSingleCommonVar = /^[a-zA-Z]$/.test(content) && commonVars.includes(content.toLowerCase());
                     
                     if (/[a-zA-Z]+/.test(content) && !content.includes('\\text') && !content.includes('\\texttt')) {
                         const hasMathSymbol = /[+\-*/=<>^_\\]/.test(content);
                         const hasMathCommand = /\\[a-zA-Z]+/.test(content);
                         const hasBrackets = /\{\}/.test(content);
-                        if (!hasMathSymbol && !hasMathCommand && !hasBrackets && content.match(/[a-zA-Z]+/g)) {
+                        if (!hasMathSymbol && !hasMathCommand && !hasBrackets && content.match(/[a-zA-Z]+/g) && !isSingleCommonVar) {
                             issues.push({
                                 type: 'warning',
                                 title: 'LaTeX 中可能包含非数学文本',
@@ -779,17 +781,14 @@
                         }
                     }
                     
-                    if (/^[a-zA-Z]$/.test(content)) {
-                        const commonVars = ['x', 'y', 'z', 'n', 'm', 'k', 'i', 'j', 'a', 'b', 'c', 'd', 'f', 'g', 'h'];
-                        if (!commonVars.includes(content.toLowerCase())) {
-                            issues.push({
-                                type: 'warning',
-                                title: '单个字母可能无需使用公式',
-                                desc: `单个字母 "${content}" 是否需要使用 $...$ 包裹？`,
-                                line: lineNum,
-                                col: match.index + 1
-                            });
-                        }
+                    if (/^[a-zA-Z]$/.test(content) && !isSingleCommonVar) {
+                        issues.push({
+                            type: 'warning',
+                            title: '单个字母可能无需使用公式',
+                            desc: `单个字母 "${content}" 是否需要使用 $...$ 包裹？`,
+                            line: lineNum,
+                            col: match.index + 1
+                        });
                     }
                     
                     if (/([a-zA-Z])_([a-zA-Z]{2,})/.test(content)) {
