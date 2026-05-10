@@ -284,15 +284,21 @@
                 <div class="panel-body">
                     <div class="editor-container">
                         <div class="line-numbers" id="lineNumbers">1</div>
-                        <textarea id="inputText" class="editor-textarea" placeholder="请在此输入题解文本...&#10;&#10;例如：&#10;# 题目分析&#10;&#10;这道题可以使用动态规划解决。设 dp[i] 表示前 i 个元素的最优解，则状态转移方程为：&#10;&#10;$$dp[i] = max(dp[i-1], dp[i-2] + a[i])$$&#10;&#10;时间复杂度为 $O(n)$。" oninput="updateLineNumbers()" onscroll="syncScroll()"></textarea>
+                        <textarea id="inputText" class="editor-textarea" placeholder="请在此输入题解文本...&#10;&#10;例如：&#10;# 题目分析&#10;&#10;这道题可以使用动态规划解决。设 dp[i] 表示前 i 个元素的最优解，则状态转移方程为：&#10;&#10;$$dp[i] = max(dp[i-1], dp[i-2] + a[i])$$&#10;&#10;时间复杂度为 $O(n)$。" oninput="updateLineNumbers(); updateStats()" onscroll="syncScroll()"></textarea>
                     </div>
                     <div style="margin-top: 15px;">
                         <button class="btn btn-primary" onclick="checkSolution()">
                             <span>🔍</span> 开始检查
                         </button>
+                        <button class="btn btn-secondary" onclick="loadExample()">
+                            <span>📄</span> 加载示例
+                        </button>
                         <button class="btn btn-secondary" onclick="clearAll()">
                             <span>🗑️</span> 清空内容
                         </button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                        <span id="charCount">0</span> 字符 | <span id="lineCount">1</span> 行
                     </div>
                 </div>
             </div>
@@ -394,30 +400,50 @@
         function checkSolution() {
             const text = document.getElementById('inputText').value;
             const issues = [];
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> 检查中...';
+            btn.disabled = true;
             
-            if (!text.trim()) {
-                showResult([{
-                    type: 'warning',
-                    title: '输入为空',
-                    desc: '请输入题解文本后再进行检查',
-                    line: 0
-                }]);
-                return;
-            }
-            
-            issues.push(...checkPunctuation(text));
-            issues.push(...checkChineseEnglishSpace(text));
-            issues.push(...checkMarkdownFormat(text));
-            issues.push(...checkLaTeXFormat(text));
-            issues.push(...checkContentRules(text));
-            
-            showResult(issues);
+            setTimeout(() => {
+                if (!text.trim()) {
+                    showResult([{
+                        type: 'warning',
+                        title: '输入为空',
+                        desc: '请输入题解文本后再进行检查',
+                        line: 0
+                    }]);
+                } else {
+                    issues.push(...checkPunctuation(text));
+                    issues.push(...checkChineseEnglishSpace(text));
+                    issues.push(...checkMarkdownFormat(text));
+                    issues.push(...checkLaTeXFormat(text));
+                    issues.push(...checkContentRules(text));
+                    showResult(issues);
+                }
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 50);
+        }
+        
+        function loadExample() {
+            const example = '# 题目分析\n\n这道题可以使用动态规划解决。设 $dp[i]$ 表示前 $i$ 个元素的最优解。\n\n状态转移方程为：\n\n$$dp[i] = \\max(dp[i-1], dp[i-2] + a[i])$$\n\n时间复杂度为 $O(n)$，空间复杂度为 $O(n)$。\n\n## 代码实现\n\n```cpp\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nint solve(vector<int>& a) {\n    int n = a.size();\n    vector<int> dp(n + 1);\n    dp[0] = 0;\n    dp[1] = a[0];\n    for (int i = 2; i <= n; ++i) {\n        dp[i] = max(dp[i-1], dp[i-2] + a[i-1]);\n    }\n    return dp[n];\n}\n```';
+            document.getElementById('inputText').value = example;
+            updateLineNumbers();
+            updateStats();
+        }
+        
+        function updateStats() {
+            const text = document.getElementById('inputText').value;
+            document.getElementById('charCount').textContent = text.length;
+            document.getElementById('lineCount').textContent = text.split('\\n').length;
         }
         
         function removeFormulas(text) {
             let result = text;
-            result = result.replace(/`[^`]+`/g, '');
-            result = result.replace(/\$[^$]+\$/g, '');
+            result = result.replace(/`[^`]+?`/g, '');
+            result = result.replace(/\$[^$]+?\$/g, '');
             result = result.replace(/\$\$[\s\S]*?\$\$/g, '');
             return result;
         }
@@ -938,6 +964,8 @@
                     </li>
                 `;
             }).join('');
+            
+            document.querySelector('.result-panel').scrollIntoView({ behavior: 'smooth' });
         }
         
         function updateLineNumbers() {
@@ -958,8 +986,13 @@
         }
         
         function clearAll() {
+            if (document.getElementById('inputText').value.trim() && 
+                !confirm('确定要清空所有内容吗？此操作不可撤销。')) {
+                return;
+            }
             document.getElementById('inputText').value = '';
             updateLineNumbers();
+            updateStats();
             document.getElementById('successCount').textContent = '0';
             document.getElementById('warningCount').textContent = '0';
             document.getElementById('errorCount').textContent = '0';
@@ -973,6 +1006,15 @@
                 </li>
             `;
         }
+        
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                checkSolution();
+            }
+        });
+        
+        updateStats();
     </script>
 </body>
 </html>
