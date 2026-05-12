@@ -17,15 +17,16 @@
             min-height: 100vh;
             padding: 24px;
             transition: background 0.3s;
+            display: grid;
         }
 
         /* 主容器：左右两栏布局 */
         .dashboard {
-            max-width: 1600px;
-            margin: 0 auto;
+            margin: 0;
             display: flex;
             gap: 24px;
             flex-wrap: wrap;
+            max-height: 100%;
         }
 
         /* 左侧编辑区 */
@@ -40,6 +41,7 @@
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
+            max-height: 90vh;
         }
 
         /* 右侧报告区 */
@@ -53,11 +55,12 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            max-height: 90vh;
         }
 
         /* 通用卡片头部 */
         .panel-header {
-            padding: 18px 24px;
+            padding: 18px 20px;
             background: #ffffff;
             border-bottom: 1px solid #edf2f7;
             display: flex;
@@ -89,22 +92,6 @@
             display: flex;
             gap: 12px;
             align-items: center;
-        }
-
-        /* 齿轮设置按钮 */
-        .settings-gear {
-            background: #f1f5f9;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 40px;
-            font-size: 1.25rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            color: #334155;
         }
 
         .settings-gear:hover {
@@ -190,7 +177,7 @@
         /* 编辑器区域 */
         .editor-container {
             display: flex;
-            height: 520px;
+            height: -webkit-fill-available;
             border: 1px solid #e9edf2;
             border-radius: 20px;
             margin: 0 20px 20px 20px;
@@ -225,6 +212,7 @@
             resize: none;
             background: #ffffff;
             color: #0f172a;
+            text-wrap: nowrap;
         }
 
         .editor-textarea:focus {
@@ -280,7 +268,7 @@
         .stats {
             display: flex;
             gap: 12px;
-            margin: 0 20px 20px 20px;
+            margin: 20px 20px 20px;
             flex-wrap: wrap;
         }
 
@@ -381,11 +369,11 @@
             transform: translateX(2px);
         }
 
-        .issue-item.success { border-left: 5px solid #2b9348; background: #f6fef9; }
-        .issue-item.warning { border-left: 5px solid #f59e0b; background: #fffbee; }
-        .issue-item.error { border-left: 5px solid #ef4444; background: #fef2f2; }
+        .issue-item.success {border-left: 5px solid #2b9348;background: #f6fef9;color: #2b9348;}
+        .issue-item.warning {border-left: 5px solid #f59e0b;background: #fffbee;color: #f59e0b;}
+        .issue-item.error {border-left: 5px solid #ef4444;background: #fef2f2;color: #ef4444;}
 
-        .issue-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .issue-icon {font-size: 1.4rem;flex-shrink: 0;min-width: 25px;}
         .issue-content { flex: 1; }
         .issue-title { font-weight: 600; color: #0f172a; margin-bottom: 4px; font-size: 0.9rem; }
         .issue-desc { font-size: 0.8rem; color: #475569; }
@@ -515,7 +503,7 @@
         body.dark-mode .issue-item.warning { background: rgba(245, 158, 11, 0.1); }
         body.dark-mode .issue-item.error { background: rgba(239, 68, 68, 0.1); }
 
-        @media (max-width: 780px) {
+        @media (max-width: 940px) {
             .dashboard { flex-direction: column; }
             body { padding: 16px; }
         }
@@ -532,7 +520,6 @@
     <!-- 左侧编辑区 -->
     <div class="editor-panel">
         <div class="panel-header">
-            <h2><span>✍️</span> 题解编辑器</h2>
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="checkSolution()">🔍 开始检查</button>
                 <button class="btn btn-secondary" onclick="loadExample()">📄 示例</button>
@@ -551,11 +538,10 @@
     <!-- 右侧报告区 -->
     <div class="report-panel">
         <div class="panel-header report-header">
-            <h2><span>📋</span> 检查报告</h2>
             <div class="action-buttons">
-                <button class="btn btn-secondary btn-sm" onclick="exportReport()">📥 导出报告</button>
-                <button id="settingsToggleBtn" class="settings-gear" title="设置 & 帮助">⚙️</button>
-                <button id="themeToggle" class="btn btn-secondary btn-sm" onclick="toggleTheme()">🌙 暗色模式</button>
+                <button class="btn btn-secondary" onclick="exportReport()">📥 导出报告</button>
+                <button id="settingsToggleBtn" class="btn btn-secondary" title="设置 & 帮助">⚙️ 设置</button>
+                <button id="themeToggle" class="btn btn-secondary" onclick="toggleTheme()">🌙 暗色模式</button>
             </div>
         </div>
 
@@ -585,11 +571,31 @@
                     </ul>
                 </details>
             </div>
+            <div class="help-shortcut" style="margin-top: 12px;">
+                <details>
+                    <summary>⚠️ 免责声明</summary>
+                    <div style="margin-top: 10px; line-height: 1.6; font-size: 12px;">
+                        <p>本工具仅供洛谷题解格式参考使用，检查结果仅供参考。</p>
+                        <p>检查结果不代表洛谷官方审核标准，最终请以洛谷官方规范和审核结果为准。</p>
+                        <p>本工具无法保证 100% 检测出所有格式问题，请用户根据实际情况自行判断。</p>
+                    </div>
+                </details>
+            </div>
+            <div class="help-shortcut" style="margin-top: 12px;">
+                <details>
+                    <summary>👥 贡献者名单</summary>
+                    <ul style="margin-top: 10px; margin-left: 18px; line-height: 1.6; font-size: 12px;">
+                        <li><strong>开发团队</strong>：洛谷题解格式检查工具开发组</li>
+                        <li><strong>UI 设计</strong>：Dashboard 布局设计</li>
+                        <li><strong>规范参考</strong>：洛谷题解规范</li>
+                        <li><strong>特别感谢</strong>：所有提供反馈和建议的用户</li>
+                    </ul>
+                </details>
+            </div>
         </div>
 
         <!-- 统计区域 -->
         <div class="stats">
-            <div class="stat-item"><div class="stat-icon success">✓</div><div><div class="stat-text">通过</div><div class="stat-count" id="successCount">—</div></div></div>
             <div class="stat-item"><div class="stat-icon warning">⚠️</div><div><div class="stat-text">警告</div><div class="stat-count" id="warningCount">—</div></div></div>
             <div class="stat-item"><div class="stat-icon error">✗</div><div><div class="stat-text">错误</div><div class="stat-count" id="errorCount">—</div></div></div>
         </div>
@@ -820,6 +826,39 @@
                         issues.push({ type: 'warning', category: 'latex', title: 'LaTeX含普通文本', desc: `公式 "${content}" 中的单词建议用 \\text{}`, line: i+1 });
                     }
                 }
+                
+                const chinesePunctuation = /[\u3002\uff0c\uff01\uff1f\uff1a\uff1b\uff08\uff09]/g;
+                if (chinesePunctuation.test(content)) {
+                    issues.push({ type: 'warning', category: 'latex', title: '公式中使用了中文标点', desc: `公式 "${content}" 中应使用英文半角标点`, line: i+1 });
+                }
+            }
+            
+            const splitFormulaPattern = /\$[a-zA-Z0-9]\$\s*[+\-*/=<>]\s*\$[a-zA-Z0-9]\$/g;
+            let splitMatch;
+            while ((splitMatch = splitFormulaPattern.exec(line)) !== null) {
+                issues.push({ type: 'warning', category: 'latex', title: '数学公式分开书写', desc: `建议将 "${splitMatch[0]}" 合并为一个公式环境`, line: i+1 });
+            }
+            
+            const splitFormulaPattern2 = /\$[a-zA-Z0-9]\$\s*\$[+\-*/=<>]\$\s*\$[a-zA-Z0-9]\$/g;
+            let splitMatch2;
+            while ((splitMatch2 = splitFormulaPattern2.exec(line)) !== null) {
+                issues.push({ type: 'warning', category: 'latex', title: '数学公式分开书写', desc: `建议将 "${splitMatch2[0]}" 合并为一个公式环境`, line: i+1 });
+            }
+            
+            const inlineMathFull = /\$([\s\S]*?)\$/g;
+            let mathMatch;
+            while ((mathMatch = inlineMathFull.exec(line)) !== null) {
+                const content = mathMatch[1];
+                const subscriptWithoutBraces = /[a-zA-Z0-9]_[a-zA-Z0-9]/g;
+                const superscriptWithoutBraces = /[a-zA-Z0-9]\^[a-zA-Z0-9]/g;
+                let subMatch;
+                while ((subMatch = subscriptWithoutBraces.exec(content)) !== null) {
+                    issues.push({ type: 'warning', category: 'latex', title: '下标格式建议', desc: `建议将 "${subMatch[0]}" 改为 ${subMatch[0][0]}_{${subMatch[0][2]}}`, line: i+1 });
+                }
+                let supMatch;
+                while ((supMatch = superscriptWithoutBraces.exec(content)) !== null) {
+                    issues.push({ type: 'warning', category: 'latex', title: '上标格式建议', desc: `建议将 "${supMatch[0]}" 改为 ${supMatch[0][0]}^{${supMatch[0][2]}}`, line: i+1 });
+                }
             }
         }
         if(!text.includes('\\pmod') && (text.includes(' mod ') || text.includes(' % ')))
@@ -852,6 +891,30 @@
                 }
             }
         }
+        
+        const oNotationWithConstant = /O\(\s*\d+(\.\d+)?([eE][+-]?\d+)?\s*\)/gi;
+        const oMatch = text.match(oNotationWithConstant);
+        if (oMatch) {
+            issues.push({ type: 'warning', category: 'content', title: '大O记号使用常数', desc: `时间复杂度不应使用常数，如 "${oMatch[0]}" 应改为 O(n) 等`, line: 0 });
+        }
+        
+        if (!text.includes('证明') && !text.includes('证明如下') && !text.includes('证明：') && !text.includes('证明.')) {
+            issues.push({ type: 'warning', category: 'content', title: '缺少重要结论证明', desc: '建议对重要结论进行解释与证明', line: 0 });
+        }
+        
+        const codeBlockRegex = /```(\w*)\s*([\s\S]*?)```/g;
+        let cbMatch;
+        while ((cbMatch = codeBlockRegex.exec(text)) !== null) {
+            const lang = cbMatch[1];
+            const content = cbMatch[2].trim();
+            if (!lang && content.length > 0) {
+                const hasCodeKeywords = /\b(include|using|class|function|def|int|float|return|if|else|for|while)\b/i.test(content);
+                if (!hasCodeKeywords && content.length < 100) {
+                    issues.push({ type: 'warning', category: 'markdown', title: '代码块可能滥用', desc: '非代码内容不应使用代码块，建议使用行内代码或普通文本', line: 0 });
+                }
+            }
+        }
+        
         return issues;
     }
 
@@ -868,31 +931,29 @@
     }
 
     function renderIssuesWithFilters() {
-        if (!rawIssues) {
-            document.getElementById('issuesList').innerHTML = '<li class="issue-item success"><div class="issue-content"><div class="issue-title">暂无检查结果</div><div class="issue-desc">请点击开始检查</div></div></li>';
-            return;
-        }
-        let filtered = rawIssues.filter(issue => {
-            const cat = issue.category || 'content';
-            return categoryFilters[cat] !== false;
-        });
-        if(currentTypeFilter !== 'all') filtered = filtered.filter(i => i.type === currentTypeFilter);
-        
-        const successCount = filtered.filter(i=>i.type==='success').length;
-        const warningCount = filtered.filter(i=>i.type==='warning').length;
-        const errorCount = filtered.filter(i=>i.type==='error').length;
-        document.getElementById('successCount').textContent = successCount;
-        document.getElementById('warningCount').textContent = warningCount;
-        document.getElementById('errorCount').textContent = errorCount;
+            if (!rawIssues) {
+                document.getElementById('issuesList').innerHTML = '<li class="issue-item success"><div class="issue-content"><div class="issue-title">暂无检查结果</div><div class="issue-desc">请点击开始检查</div></div></li>';
+                return;
+            }
+            let filtered = rawIssues.filter(issue => {
+                const cat = issue.category || 'content';
+                return categoryFilters[cat] !== false;
+            });
+            if(currentTypeFilter !== 'all') filtered = filtered.filter(i => i.type === currentTypeFilter);
+            
+            const warningCount = filtered.filter(i=>i.type==='warning').length;
+            const errorCount = filtered.filter(i=>i.type==='error').length;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('errorCount').textContent = errorCount;
 
         const container = document.getElementById('issuesList');
         if(filtered.length === 0){
-            container.innerHTML = '<li class="issue-item success"><div class="issue-content"><div class="issue-title">🎉 未发现问题</div><div class="issue-desc">格式基本符合规范 (或当前过滤隐藏了所有项)</div></div></li>';
+            container.innerHTML = '🎉 未发现问题<div class="issue-desc">格式基本符合规范 (或当前过滤隐藏了所有项)</div>';
             return;
         }
         container.innerHTML = filtered.map((issue,idx) => {
             const icon = issue.type==='success'?'✓':(issue.type==='warning'?'⚠️':'✗');
-            const location = issue.line ? `行 ${issue.line}${issue.col?`, 列 ${issue.col}`:''}` : '全文';
+            const location = issue.line ? `第 ${issue.line}${issue.col?` 行, 第 ${issue.col} 列`:' 行'}` : '全文';
             return `<li class="issue-item ${issue.type}" onclick="jumpToLine(${issue.line || 0})">
                         <span class="issue-icon">${icon}</span>
                         <div class="issue-content">
@@ -993,7 +1054,7 @@
     }
 
     function loadExample() {
-        inputEl.value = "# 题目解析：动态规划经典\n\n本题可以使用线性DP解决。设 $dp[i]$ 表示前 $i$ 个元素的最大子段和，状态转移：\n\n$$dp[i] = \\max(a[i], dp[i-1] + a[i])$$\n\n时间复杂度 $O(n)$，空间复杂度 $O(n)$。\n\n## 代码实现\n\n```cpp\n#include <bits/stdc++.h>\nusing namespace std;\nint main() { int n; cin>>n; return 0; }\n```\n\n注意：使用全角标点。例如正确使用句号。不要使用三个冒号:::会被忽略检查。";
+        inputEl.value = "# 题目解析：动态规划经典\n\n本题可以使用线性DP解决。设 $dp[i]$ 表示前 $i$ 个元素的最大子段和，状态转移：\n\n$$dp[i] = \\max(a[i], dp[i-1] + a[i])$$\n\n时间复杂度 $O(n)$，空间复杂度 $O(n)$。\n\n## 代码实现\n\n```cpp\n#include <bits/stdc++.h>\nusing namespace std;\nint main() { int n; cin>>n; return 0; }\n```\n\n";
         updateLineNumbers();
         updateStats();
         checkSolution();
